@@ -4,7 +4,7 @@ A responsive web portal prototype for COMSW4995 Multiplayer Games. The first pla
 
 ## Run in Browser
 
-Go to <https://cdilli223.github.io/comsw4995-web-game-portal/>. The first screen uses fictional catalog, profile, and match data so the portal is explorable without backend access. The profile dialog's Google, Facebook, guest, and phone paths are explicitly mock interactions. Use the gear button for the separate local backend development login. `file://` can render the local demo, but service workers and API requests require localhost or HTTPS.
+Go to <a href="https://cdilli223.github.io/comsw4995-web-game-portal/" target="_blank">this GitHub Page</a>. The first screen uses fictional catalog, profile, and match data so the portal is explorable without backend access. The profile dialog's Google, Facebook, guest, and phone paths are explicitly mock interactions. Use the gear button for the separate local backend development login. `file://` can render the local demo, but service workers and API requests require localhost or HTTPS.
 
 ## Run locally
 
