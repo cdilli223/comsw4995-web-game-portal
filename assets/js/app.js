@@ -1,6 +1,16 @@
 (() => {
   'use strict';
 
+  // Demo helper: visiting `?reset` clears saved portal state (keeping API/builder connection URLs), then reloads clean.
+  if (new URLSearchParams(location.search).has('reset')) {
+    const keep = ['gameportal.apiBaseUrl', 'gameportal.builderUrl'];
+    [localStorage, sessionStorage].forEach((store) => {
+      Object.keys(store).filter((key) => key.startsWith('gameportal.') && !keep.includes(key)).forEach((key) => store.removeItem(key));
+    });
+    location.replace(location.pathname + location.hash);
+    return;
+  }
+
   const API_KEY = 'gameportal.apiBaseUrl';
   const BUILDER_KEY = 'gameportal.builderUrl';
   const MATCHES_KEY = 'gameportal.matches';
