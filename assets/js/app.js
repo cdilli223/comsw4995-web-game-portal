@@ -595,7 +595,7 @@
     ensureDemoMatches();
     persistMatches();
     renderIdentity();
-    setConnection(false, normalizedBase() ? 'Sign in' : 'Local demo');
+    setConnection(false, 'Sign in');
   }
 
   async function loadRemoteData() {
@@ -607,7 +607,7 @@
         ensureDemoMatches();
         persistMatches();
       }
-      setConnection(false, normalizedBase() ? 'Sign in' : 'Local demo');
+      setConnection(false, 'Sign in');
       renderGames();
       renderMatches();
       return;
@@ -1861,7 +1861,7 @@
     $('#top-profile-signout').addEventListener('click', () => {
       clearSession();
       closeTopProfileMenu();
-      setConnection(false, normalizedBase() ? 'Sign in' : 'Local demo');
+      setConnection(false, 'Sign in');
       setView('discover');
     });
     document.addEventListener('click', (event) => {
