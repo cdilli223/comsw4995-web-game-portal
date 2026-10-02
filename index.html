@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f3f1e9" />
+    <title>GamePortal | Play together</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <script src="assets/js/app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Main navigation">
+        <a class="wordmark" id="home-link" href="#discover" aria-label="GamePortal home">
+          <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span>game<span class="wordmark-light">portal</span></span>
+        </a>
+
+        <div class="side-label">Your space</div>
+        <nav class="main-nav">
+          <button class="nav-item active" type="button" data-view="discover"><span class="nav-icon" aria-hidden="true">◫</span>Discover</button>
+          <button class="nav-item" type="button" data-view="matches"><span class="nav-icon" aria-hidden="true">▤</span>My matches<span class="nav-count" id="match-count">0</span></button>
+          <button class="nav-item" type="button" data-view="inbox"><span class="nav-icon" aria-hidden="true">✉</span>Messages<span class="nav-count" id="message-count">0</span></button>
+        </nav>
+
+        <div class="side-rule"></div>
+        <div class="side-label">Quick start</div>
+        <button class="quick-game" type="button" data-quick-game="ttt">
+          <span class="quick-symbols" aria-hidden="true"><b>X</b><b>O</b></span>
+          <span><strong>Tic-Tac-Toe</strong><small>One quick round</small></span>
+          <span class="quick-arrow" aria-hidden="true">↗</span>
+        </button>
+
+        <div class="sidebar-bottom">
+          <button class="builder-link" id="builder-link" type="button">
+            <span class="builder-glyph" aria-hidden="true">✳</span>
+            <span><strong>GameBuilder</strong><small>Make something new</small></span>
+            <span class="quick-arrow" aria-hidden="true">↗</span>
+          </button>
+          <div class="profile-row">
+            <button class="profile-trigger" id="profile-button" type="button" aria-label="Open player profile">
+            <span class="avatar">C</span>
+            <span class="profile-copy"><strong id="profile-name">Guest player</strong><small id="profile-role">Local profile</small></span>
+            </button>
+            <button class="icon-button" id="settings-button" type="button" aria-label="Connection settings" title="Connection settings">⚙</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-area">
+        <header class="topbar">
+          <div class="breadcrumb"><span>GAME NIGHT</span><span class="breadcrumb-divider">/</span><span id="section-name">DISCOVER</span></div>
+          <div class="topbar-actions">
+            <button class="sync-button" id="pending-moves-button" type="button" hidden><span aria-hidden="true">⇅</span><span id="pending-moves-count">0 pending</span></button>
+            <button class="connection-pill" id="connection-pill" type="button"><i aria-hidden="true"></i><span>Local demo</span></button>
+            <button class="icon-button theme-toggle-top" id="top-theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">☾</button>
+            <button class="icon-button top-settings" id="top-settings-button" type="button" aria-label="Connection settings" title="Connection settings">⚙</button>
+            <div class="top-profile-wrap" id="top-profile-wrap" hidden>
+              <button class="top-profile-trigger" id="top-profile-trigger" type="button" aria-label="Open profile menu" aria-haspopup="menu" aria-expanded="false">
+                <span class="top-profile-avatar avatar" id="top-profile-avatar" aria-hidden="true">A</span><span class="top-profile-name" id="top-profile-name">Player</span><span class="top-profile-chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div class="top-profile-menu" id="top-profile-menu" role="menu" aria-label="Profile menu" hidden>
+                <div class="top-profile-menu-head"><strong id="top-profile-menu-name">Player</strong><small id="top-profile-menu-role">Local demo</small></div>
+                <button class="top-profile-menu-item" id="top-profile-open" type="button" role="menuitem">My profile</button>
+                <button class="top-profile-menu-item" id="top-profile-switch" type="button" role="menuitem">Switch demo profile <span aria-hidden="true">›</span></button>
+                <div class="top-profile-switch-options" id="top-profile-switch-options" hidden>
+                  <button class="top-profile-menu-item" type="button" data-top-demo-profile="Alex" data-top-demo-provider="Google demo">Alex</button>
+                  <button class="top-profile-menu-item" type="button" data-top-demo-profile="Sam" data-top-demo-provider="Facebook demo">Sam</button>
+                  <button class="top-profile-menu-item" type="button" data-top-demo-profile="Guest player" data-top-demo-provider="Guest">Guest player</button>
+                </div>
+                <button class="top-profile-menu-item signout-item" id="top-profile-signout" type="button" role="menuitem">Sign out</button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="view" id="discover-view" aria-labelledby="discover-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow"><span class="eyebrow-dot"></span>YOUR NEXT TABLE IS OPEN</p>
+              <h1 id="discover-title">Find your next<br /><em>favorite game.</em></h1>
+            </div>
+            <p class="heading-note">Good games are better<br />when someone joins in.</p>
+          </div>
+
+          <section class="featured-game" aria-label="Featured game">
+            <div class="feature-copy">
+              <div class="feature-kicker"><span>START HERE</span><span class="feature-tag">2 PLAYERS · 3 MIN</span></div>
+              <h2>Tic-Tac-Toe,<br />your way.</h2>
+              <p>Challenge the computer, pass the phone, or invite someone in.</p>
+              <button class="button button-lime" type="button" data-create-game="ttt">Choose how to play <span aria-hidden="true">→</span></button>
+            </div>
+            <div class="feature-art" aria-hidden="true">
+              <div class="game-spark spark-one">✳</div><div class="game-spark spark-two">+</div>
+              <div class="ttt-art">
+                <span class="art-x">X</span><span></span><span class="art-o">O</span>
+                <span></span><span class="art-x">X</span><span></span>
+                <span class="art-o">O</span><span></span><span class="art-x">X</span>
+              </div>
+              <span class="art-caption">YOUR MOVE</span>
+            </div>
+          </section>
+
+          <div class="section-heading game-list-heading">
+            <div><p class="eyebrow">THE SHELF</p><h2>Pick a game</h2></div>
+            <label class="search-box"><span aria-hidden="true">⌕</span><input id="game-search" type="search" placeholder="Search games" aria-label="Search games" /></label>
+          </div>
+          <div class="filter-row" role="group" aria-label="Filter games">
+            <button class="filter-chip selected" type="button" data-filter="all">All games</button>
+            <button class="filter-chip" type="button" data-filter="strategy">Strategy</button>
+            <button class="filter-chip" type="button" data-filter="cards">Cards</button>
+            <button class="filter-chip" type="button" data-filter="quick">Quick play</button>
+            <button class="filter-chip" type="button" data-filter="offline">Offline-ready</button>
+          </div>
+          <div class="game-grid" id="game-grid" aria-live="polite"></div>
+          <div class="empty-state" id="empty-games" hidden>No games match that search yet.</div>
+          <p class="source-note" id="game-source-note">Sample games · connect the course API in settings to load published games.</p>
+        </section>
+
+        <section class="view" id="matches-view" aria-labelledby="matches-title" hidden>
+          <div class="page-heading compact-heading">
+            <div><p class="eyebrow"><span class="eyebrow-dot"></span>YOUR TABLES</p><h1 id="matches-title">My matches<span class="heading-period">.</span></h1></div>
+            <button class="button button-dark" type="button" id="new-match-button">＋ New match</button>
+          </div>
+          <div class="match-tabs" role="tablist" aria-label="Match status">
+            <button class="match-tab selected" type="button" data-match-filter="active">In progress <span id="active-count">0</span></button>
+            <button class="match-tab" type="button" data-match-filter="lobby">Lobbies</button>
+            <button class="match-tab" type="button" data-match-filter="finished">Finished</button>
+            <button class="match-tab" type="button" data-match-filter="local">Local</button>
+          </div>
+          <div class="match-list" id="match-list"></div>
+          <div class="empty-matches" id="empty-matches" hidden>
+            <div class="empty-mark" aria-hidden="true">＋</div><h2>No tables yet</h2><p>Pick a game and invite someone to play.</p>
+            <button class="button button-dark" type="button" data-switch-view="discover">Browse games</button>
+          </div>
+        </section>
+
+        <section class="view" id="profile-view" aria-labelledby="profile-title" hidden>
+          <div class="page-heading compact-heading">
+            <div><p class="eyebrow"><span class="eyebrow-dot"></span>PLAYER SPACE</p><h1 id="profile-title">My profile<span class="heading-period">.</span></h1></div>
+          </div>
+          <div class="profile-layout">
+            <section class="profile-summary" aria-label="Demo profile">
+              <span class="profile-avatar-large" id="profile-view-avatar">G</span>
+              <div class="profile-summary-copy"><p class="eyebrow">DEMO PROFILE</p><h2 id="profile-view-name">Guest player</h2><p id="profile-view-handle">@guest_player</p></div>
+              <span class="profile-demo-tag">MOCKUP</span>
+            </section>
+            <div class="profile-workspace">
+              <div class="profile-tabs" role="tablist" aria-label="Profile settings">
+                <button class="profile-tab selected" id="profile-tab-account" type="button" role="tab" aria-selected="true" aria-controls="profile-panel-account" data-profile-tab="account">Account</button>
+                <button class="profile-tab" id="profile-tab-preferences" type="button" role="tab" aria-selected="false" aria-controls="profile-panel-preferences" data-profile-tab="preferences">Preferences</button>
+                <button class="profile-tab" id="profile-tab-payments" type="button" role="tab" aria-selected="false" aria-controls="profile-panel-payments" data-profile-tab="payments">Payments</button>
+                <button class="profile-tab" id="profile-tab-support" type="button" role="tab" aria-selected="false" aria-controls="profile-panel-support" data-profile-tab="support">Support</button>
+              </div>
+
+              <section class="profile-panel" id="profile-panel-account" role="tabpanel" aria-labelledby="profile-tab-account">
+                <div class="profile-panel-heading"><div><p class="eyebrow">ACCOUNT DETAILS</p><h2>Profile and contact</h2></div></div>
+                <div class="profile-panel-grid">
+                  <form class="profile-panel-block profile-account-form" id="profile-account-form">
+                    <section class="profile-picture-settings" aria-labelledby="profile-picture-title">
+                      <div class="profile-picture-current"><span class="profile-avatar-edit" id="avatar-settings-preview" aria-hidden="true">A</span><div><strong id="profile-picture-title">Profile picture</strong><small>Stored on this device</small></div></div>
+                      <input class="visually-hidden" id="profile-picture-input" type="file" accept="image/png,image/jpeg,image/webp" aria-hidden="true" tabindex="-1" />
+                      <div class="profile-picture-actions"><button class="button button-outline" id="choose-profile-picture" type="button">Upload photo</button><button class="text-button" id="remove-profile-picture" type="button" hidden>Remove photo</button></div>
+                      <div class="avatar-presets" role="group" aria-label="Choose a built-in avatar">
+                        <button class="avatar-preset-button avatar-preset-initials selected" type="button" data-avatar-preset="initials" aria-label="Use initials avatar" aria-pressed="true">A</button>
+                        <button class="avatar-preset-button avatar-preset-sun" type="button" data-avatar-preset="sun" aria-label="Use sun avatar" aria-pressed="false">✷</button>
+                        <button class="avatar-preset-button avatar-preset-orbit" type="button" data-avatar-preset="orbit" aria-label="Use orbit avatar" aria-pressed="false">◉</button>
+                        <button class="avatar-preset-button avatar-preset-grid" type="button" data-avatar-preset="grid" aria-label="Use grid avatar" aria-pressed="false">▦</button>
+                      </div>
+                      <p class="profile-setting-note" id="profile-picture-feedback" role="status">Choose a photo or built-in avatar.</p>
+                    </section>
+                    <label class="field-label" for="profile-username">Username</label>
+                    <div class="username-field"><span aria-hidden="true">@</span><input class="field-input" id="profile-username" name="username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+" autocomplete="username" /></div>
+                    <label class="field-label" for="profile-email">Email address</label>
+                    <input class="field-input" id="profile-email" name="email" type="email" autocomplete="email" required />
+                    <label class="field-label" for="profile-phone">Phone number</label>
+                    <input class="field-input" id="profile-phone" name="phone" type="tel" autocomplete="tel" placeholder="Add a phone number" />
+                    <div class="profile-form-footer"><p id="profile-account-feedback" role="status">Demo details are stored on this device.</p><button class="button button-dark" type="submit">Save profile</button></div>
+                  </form>
+                  <section class="profile-panel-block" aria-labelledby="social-title">
+                    <div class="profile-panel-heading"><div><p class="eyebrow">CONNECTED ACCOUNTS</p><h3 id="social-title">Social sign-in</h3></div></div>
+                    <div class="social-account-list">
+                      <div class="social-account"><span class="social-mark google-mark" aria-hidden="true">G</span><span><strong>Google</strong><small id="google-social-state">Not connected</small></span><button class="text-button" type="button" data-social-toggle="google">Connect</button></div>
+                      <div class="social-account"><span class="social-mark facebook-mark" aria-hidden="true">f</span><span><strong>Facebook</strong><small id="facebook-social-state">Not connected</small></span><button class="text-button" type="button" data-social-toggle="facebook">Connect</button></div>
+                    </div>
+                    <p class="profile-setting-note">Connection controls are simulated; no social account is contacted.</p>
+                  </section>
+                </div>
+                <div class="profile-activity-strip"><div><strong id="profile-table-count">0</strong><span>Saved tables</span></div><div><strong id="profile-lobby-count">0</strong><span>Open lobbies</span></div><button class="text-button" id="profile-lobbies-button" type="button">Browse lobbies <span aria-hidden="true">→</span></button></div>
+              </section>
+
+              <section class="profile-panel" id="profile-panel-preferences" role="tabpanel" aria-labelledby="profile-tab-preferences" hidden>
+                <div class="profile-panel-heading"><div><p class="eyebrow">YOUR EXPERIENCE</p><h2>Preferences</h2></div></div>
+                <div class="profile-panel-grid preferences-grid">
+                  <section class="profile-panel-block"><label class="field-label" for="language-select">Language</label><select class="field-select" id="language-select"><option value="en">English</option><option value="es">Español</option></select><p class="profile-setting-note" id="language-feedback">Preference saved on this device.</p></section>
+                  <section class="profile-panel-block"><span class="field-label">Appearance</span><div class="theme-options" role="group" aria-label="Color theme"><button class="theme-option selected" type="button" data-theme-option="light" aria-pressed="true"><span aria-hidden="true">☼</span>Light</button><button class="theme-option" type="button" data-theme-option="dark" aria-pressed="false"><span aria-hidden="true">◐</span>Dark</button></div></section>
+                </div>
+                <section class="profile-panel-block notification-settings"><div class="profile-panel-heading"><div><p class="eyebrow">STAY IN THE LOOP</p><h3>Notifications</h3></div></div>
+                  <label class="preference-row"><span><strong>Match updates</strong><small>Turn changes, results, and rematches</small></span><input type="checkbox" data-notification="matchUpdates" /></label>
+                  <label class="preference-row"><span><strong>Invitations</strong><small>New invites and lobby activity</small></span><input type="checkbox" data-notification="invitations" /></label>
+                  <label class="preference-row"><span><strong>Product news</strong><small>Occasional GamePortal announcements</small></span><input type="checkbox" data-notification="productNews" /></label>
+                </section>
+              </section>
+
+              <section class="profile-panel" id="profile-panel-payments" role="tabpanel" aria-labelledby="profile-tab-payments" hidden>
+                <div class="profile-panel-heading"><div><p class="eyebrow">BILLING</p><h2>Payment methods</h2></div><span class="profile-demo-tag">DEMO ONLY</span></div>
+                <div class="profile-panel-block payment-method" id="payment-method-card"><span class="payment-chip" aria-hidden="true">▰</span><div><strong>Visa ending in 4242</strong><small>Demo method · Expires 08/28</small></div><button class="text-button" type="button" id="remove-payment-button">Remove</button></div>
+                <button class="button button-outline payment-add-button" id="add-payment-button" type="button" hidden>Add sample payment method</button>
+                <p class="profile-setting-note">No real payment details are collected or charged in this prototype.</p>
+                <div class="profile-panel-heading billing-heading"><div><p class="eyebrow">RECENT ACTIVITY</p><h3>Billing history</h3></div></div>
+                <div class="billing-row"><span>GamePortal demo credit</span><span>$0.00</span><small>Oct 02, 2026</small><strong>Demo</strong></div>
+              </section>
+
+              <section class="profile-panel" id="profile-panel-support" role="tabpanel" aria-labelledby="profile-tab-support" hidden>
+                <div class="profile-panel-heading"><div><p class="eyebrow">HELP DESK</p><h2>Support</h2></div></div>
+                <div class="profile-panel-grid support-grid">
+                  <section class="profile-panel-block"><h3>Common questions</h3><details class="support-faq"><summary>How do I join a table?</summary><p>Open a lobby from My matches and choose its available action. Demo lobbies are previews only.</p></details><details class="support-faq"><summary>Can I restore a local match?</summary><p>Local matches are saved in this browser. Clearing site storage removes those demo saves.</p></details><details class="support-faq"><summary>Are payments enabled?</summary><p>No. Payment details and billing history shown here are fictional mockups.</p></details></section>
+                  <form class="profile-panel-block support-form" id="support-form"><h3>Contact support</h3><label class="field-label" for="support-topic">Topic</label><select class="field-select" id="support-topic"><option>Account access</option><option>Match issue</option><option>Payment question</option><option>Other</option></select><label class="field-label" for="support-message">How can we help?</label><textarea class="field-input" id="support-message" rows="4" required maxlength="600" placeholder="Describe the issue"></textarea><div class="profile-form-footer"><p id="support-feedback" role="status">Demo requests stay on this device.</p><button class="button button-dark" type="submit">Save request</button></div></form>
+                </div>
+              </section>
+              <p class="profile-disclaimer">Profile controls are local mockups. Social connections, messages, support, and payments are not sent to external services.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="inbox-view" aria-labelledby="inbox-title" hidden>
+          <div class="page-heading compact-heading">
+            <div><p class="eyebrow"><span class="eyebrow-dot"></span>PLAYER INBOX</p><h1 id="inbox-title">Messages<span class="heading-period">.</span></h1></div>
+            <button class="button button-outline" type="button" id="mark-all-read-button">Mark all read</button>
+          </div>
+          <div class="inbox-layout" id="inbox-layout">
+            <aside class="inbox-list-pane" aria-label="Conversations">
+              <div class="inbox-list-heading"><h2>Conversations</h2><span id="conversation-total">0</span></div>
+              <div class="profile-message-list" id="global-message-list"></div>
+            </aside>
+            <section class="inbox-conversation" id="inbox-conversation" aria-label="Conversation" aria-live="polite">
+              <div class="inbox-empty" id="inbox-empty"><span aria-hidden="true">✉</span><strong>Your conversations</strong><p>Select a message to open the thread.</p></div>
+              <div class="conversation-content" id="conversation-content" hidden>
+                <header class="conversation-header"><button class="conversation-back" id="conversation-back" type="button"><span aria-hidden="true">←</span> Inbox</button><span class="message-avatar" id="conversation-avatar">A</span><div><strong id="conversation-name">Player</strong><small id="conversation-context">GamePortal message</small></div></header>
+                <div class="conversation-thread" id="conversation-thread" role="log" aria-label="Conversation messages" aria-live="polite"></div>
+                <form class="message-reply-panel" id="message-reply-form">
+                  <label class="field-label" for="message-reply-text">Reply to <span id="message-recipient">player</span></label>
+                  <textarea class="field-input" id="message-reply-text" rows="2" required maxlength="500" placeholder="Write a reply"></textarea>
+                  <div class="profile-form-footer"><p id="message-feedback" role="status">Demo messages stay on this device.</p><button class="button button-dark" type="submit">Send message</button></div>
+                </form>
+              </div>
+            </section>
+          </div>
+          <p class="profile-disclaimer">Messages and replies are local examples. Nothing is sent outside this browser.</p>
+        </section>
+
+        <section class="view play-view" id="play-view" aria-labelledby="play-title" hidden>
+          <div class="play-topline"><button class="back-button" type="button" data-switch-view="matches"><span aria-hidden="true">←</span> My matches</button><span class="play-mode-label" id="play-mode-label">LOCAL GAME</span></div>
+          <div class="play-layout">
+            <section class="board-panel">
+              <div class="turn-banner" id="turn-banner"><span class="turn-mark">X</span><span><small>UP TO YOU</small><strong>Your turn</strong></span></div>
+              <div class="handoff-panel" id="handoff-panel" hidden><p class="eyebrow">PASS-AND-PLAY</p><h2 id="handoff-title">Pass the device</h2><button class="button button-dark" id="handoff-button" type="button">I am Player 2 · reveal board</button></div>
+              <div class="live-board" id="live-board" role="group" aria-label="Tic-Tac-Toe board"></div>
+              <p class="board-hint" id="board-hint">Choose an open square.</p>
+            </section>
+            <aside class="match-info-panel">
+              <p class="eyebrow">MATCH DETAILS</p><h1 id="play-title">Tic-Tac-Toe</h1>
+              <p class="match-id" id="play-match-id">Local match</p>
+              <div class="player-list" id="player-list"></div>
+              <div class="info-divider"></div>
+              <div class="match-state-line"><span class="state-pulse"></span><span id="match-state-text">Waiting for your move</span></div>
+              <button class="text-button" id="rematch-button" type="button" hidden>Play another round <span aria-hidden="true">→</span></button>
+              <div class="privacy-note"><span aria-hidden="true">◈</span><span>Moves are shared with this match. Your game state stays in sync.</span></div>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="modal" id="create-dialog" aria-labelledby="create-title">
+      <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+      <p class="eyebrow"><span class="eyebrow-dot"></span>SET UP A TABLE</p>
+      <h2 id="create-title">How do you want to play?</h2>
+      <label class="field-label" for="create-game">Game</label>
+      <select id="create-game" class="field-select"></select>
+      <fieldset class="mode-options">
+        <legend class="field-label">Play mode</legend>
+        <label class="mode-option selected"><input type="radio" name="play-mode" value="computer" checked /><span class="mode-icon">✳</span><span><strong>Vs. computer</strong><small>Just you and the game</small></span><span class="radio-dot"></span></label>
+        <label class="mode-option"><input type="radio" name="play-mode" value="pass-and-play" /><span class="mode-icon">⇄</span><span><strong>Pass-and-play</strong><small>Take turns on this device</small></span><span class="radio-dot"></span></label>
+        <label class="mode-option"><input type="radio" name="play-mode" value="ping-pong" /><span class="mode-icon">↗</span><span><strong>Ping-pong</strong><small>Invite a player for an async match</small></span><span class="radio-dot"></span></label>
+        <label class="mode-option"><input type="radio" name="play-mode" value="real-time" /><span class="mode-icon">⇄</span><span><strong>Real-time</strong><small>Stay together in a turn-based match</small></span><span class="radio-dot"></span></label>
+      </fieldset>
+      <section class="online-invite-setup" id="online-invite-setup" aria-labelledby="invite-setup-title" hidden>
+        <div class="profile-panel-heading"><div><p class="eyebrow">LOBBY SETUP</p><h3 id="invite-setup-title">Who can join?</h3></div></div>
+        <fieldset class="invite-kind-options">
+          <label class="invite-kind-option selected"><input type="radio" name="invite-kind" value="friend" checked /><span class="invite-kind-icon" aria-hidden="true">◎</span><span><strong>Invite a friend</strong><small>Choose someone you know</small></span></label>
+          <label class="invite-kind-option"><input type="radio" name="invite-kind" value="open" /><span class="invite-kind-icon" aria-hidden="true">◌</span><span><strong>Open to strangers</strong><small>Let another player find this table</small></span></label>
+        </fieldset>
+        <div class="friend-choice-row" id="friend-choice-row"><label class="field-label" for="invite-friend">Friend</label><select class="field-select" id="invite-friend"><option value="Mina">Mina Chen</option><option value="Jordan">Jordan Lee</option><option value="Riley">Riley Morgan</option></select></div>
+        <div class="open-lobby-note" id="open-lobby-note" hidden><strong>Public demo lobby</strong><span>Anyone can appear as a simulated guest. No invitation is actually sent.</span></div>
+        <p class="online-backend-note" id="online-backend-note" hidden>Connected API lobbies are created as OPEN. The friend selector is only used by local demo lobbies.</p>
+      </section>
+      <div class="dialog-feedback" id="create-feedback" role="status"></div>
+      <button class="button button-lime dialog-submit" id="create-submit" type="button"><span id="create-submit-label">Create match</span><span aria-hidden="true">→</span></button>
+    </dialog>
+
+    <dialog class="modal login-modal" id="login-dialog" aria-labelledby="login-title">
+      <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+      <p class="eyebrow"><span class="eyebrow-dot"></span>PLAYER PROFILE</p>
+      <h2 id="login-title">Welcome to GamePortal</h2>
+      <p class="modal-intro">Choose how to continue.</p>
+      <div class="login-options">
+        <button class="button button-dark" type="button" data-demo-login="Guest player">Play as a guest</button>
+        <button class="button button-outline" type="button" data-demo-login="Alex">Continue with Google</button>
+        <button class="button button-outline" type="button" data-demo-login="Sam">Continue with Facebook</button>
+        <button class="button button-outline" id="show-phone-login" type="button">Use a phone number</button>
+      </div>
+      <div class="phone-login" id="phone-login" hidden>
+        <label class="field-label" for="mock-phone">Phone number</label>
+        <input class="field-input" id="mock-phone" type="tel" placeholder="+1 555 010 0123" autocomplete="tel" />
+        <button class="text-button" id="send-mock-code" type="button">Send verification code</button>
+        <label class="field-label" for="mock-code">Verification code</label>
+        <input class="field-input" id="mock-code" inputmode="numeric" maxlength="6" placeholder="_ _ _ _ _ _" autocomplete="one-time-code" />
+        <button class="button button-lime" id="verify-mock-code" type="button">Verify &amp; continue</button>
+      </div>
+      <p class="mock-warning">SIGN-IN MOCKUP · These profile choices are local demo identities, not Google, Facebook, or phone authentication.</p>
+      <div class="dialog-feedback" id="login-feedback" role="status"></div>
+    </dialog>
+
+    <dialog class="modal settings-modal" id="settings-dialog" aria-labelledby="settings-title">
+      <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+      <p class="eyebrow"><span class="eyebrow-dot"></span>PLATFORM CONNECTION</p>
+      <h2 id="settings-title">Connect your systems.</h2>
+          <p class="modal-intro">Connect the local course API and sign in to use its protected routes.</p>
+      <label class="field-label" for="api-url">Backend API base URL</label>
+      <input class="field-input" id="api-url" type="url" placeholder="http://localhost:3000" autocomplete="url" />
+          <label class="field-label" for="login-email">Local demo account email</label>
+          <input class="field-input" id="login-email" type="email" placeholder="player-a@demo.local" autocomplete="username" />
+          <label class="field-label" for="development-key">Backend development key</label>
+          <input class="field-input" id="development-key" type="password" placeholder="Enter the local DEV_AUTH_KEY" autocomplete="current-password" />
+          <p class="dev-key-warning">Local development login only. This key is sent to your API and is never saved by this page. Do not expose it on a deployed portal.</p>
+          <div class="settings-actions auth-actions"><button class="button button-outline" id="sign-in-button" type="button">Sign in</button><button class="button button-outline" id="sign-out-button" type="button" hidden>Sign out</button></div>
+      <label class="field-label" for="builder-url">GameBuilder URL</label>
+      <input class="field-input" id="builder-url" type="url" placeholder="https://..." autocomplete="url" />
+          <div class="integration-note"><strong>GameBuilder status</strong><span>The current builder has no package export or backend publish flow. This URL opens the builder separately; generated games are not playable in the portal yet.</span></div>
+      <div class="dialog-feedback" id="settings-feedback" role="status"></div>
+      <div class="settings-actions"><button class="button button-outline" id="test-api-button" type="button">Test API</button><button class="button button-dark" id="save-settings-button" type="button">Save connections</button></div>
+    </dialog>
+
+    <dialog class="modal" id="match-actions-dialog" aria-labelledby="match-actions-title">
+      <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+      <p class="eyebrow"><span class="eyebrow-dot"></span>MATCH ACTIONS</p>
+      <h2 id="match-actions-title">Match</h2>
+      <p class="modal-intro" id="match-actions-note"></p>
+      <div class="match-action-list">
+        <button class="button button-outline" id="share-match-button" type="button">Copy match link</button>
+        <button class="button button-outline" id="leave-match-button" type="button">Leave lobby</button>
+        <button class="button button-outline" id="cancel-match-button" type="button">Cancel shared match</button>
+        <button class="button button-outline" id="hide-match-button" type="button">Hide from my list</button>
+      </div>
+    </dialog>
+
+    <dialog class="modal" id="sample-match-dialog" aria-labelledby="sample-match-title">
+      <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+      <p class="eyebrow"><span class="eyebrow-dot"></span><span id="sample-match-type">DESIGN MOCKUP · FICTIONAL DATA</span></p>
+      <h2 id="sample-match-title">Sample match</h2>
+      <p class="modal-intro" id="sample-match-copy"></p>
+      <div class="sample-match-detail" id="sample-match-detail"></div>
+      <div class="integration-note"><strong id="sample-match-note-title">Sample only</strong><span id="sample-match-note-copy">This row demonstrates the match-list experience. It is not stored in or synchronized with the course backend.</span></div>
+    </dialog>
+
+    <dialog class="modal lobby-dialog" id="demo-lobby-dialog" aria-labelledby="demo-lobby-title">
+      <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+      <p class="eyebrow"><span class="eyebrow-dot"></span>DEMO LOBBY</p>
+      <h2 id="demo-lobby-title">Open table</h2>
+      <p class="modal-intro" id="demo-lobby-summary"></p>
+      <div class="lobby-meta-row"><span id="demo-lobby-mode">PING-PONG</span><span id="demo-lobby-visibility">FRIEND INVITE</span></div>
+      <div class="lobby-roster" id="demo-lobby-roster"></div>
+      <div class="lobby-code-row"><span><small>INVITE CODE</small><strong id="demo-lobby-code">GP-000000</strong></span><button class="button button-outline" id="copy-demo-invite" type="button">Copy code</button></div>
+      <div class="dialog-feedback" id="demo-lobby-feedback" role="status"></div>
+      <div class="lobby-dialog-actions"><button class="button button-outline" id="simulate-lobby-response" type="button">Simulate player joining</button><button class="button button-lime" id="start-demo-lobby" type="button" disabled>Start demo table</button></div>
+      <p class="mock-warning">MOCKUP · This lobby stays in this browser. No invitation or network game is created.</p>
+    </dialog>
+
+    <dialog class="modal" id="offline-dialog" aria-labelledby="offline-title">
+      <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+      <p class="eyebrow"><span class="eyebrow-dot"></span>MOVE SYNC</p>
+      <h2 id="offline-title">Pending moves</h2>
+      <div class="offline-state" id="offline-state" role="status"></div>
+      <div class="pending-move-list" id="pending-move-list"></div>
+      <p class="modal-intro">Queued moves are not confirmed until the server accepts them. A version conflict needs your review.</p>
+      <div class="settings-actions"><button class="button button-outline" id="discard-pending-button" type="button">Discard needs-review moves</button><button class="button button-dark" id="retry-pending-button" type="button">Retry queued moves</button></div>
+    </dialog>
+
+    <dialog class="modal package-dialog" id="package-dialog" aria-labelledby="package-title">
+      <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+      <p class="eyebrow"><span class="eyebrow-dot"></span>GAME PACKAGE</p>
+      <h2 id="package-title">Loading game…</h2>
+      <p class="package-status" id="package-status">Waiting for the game package.</p>
+      <iframe id="game-frame" title="Game package" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
