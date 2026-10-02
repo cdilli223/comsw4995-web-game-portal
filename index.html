@@ -8,7 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/styles.css" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=35" />
+    <link rel="stylesheet" href="assets/css/games/connect-four.css" />
+    <link rel="stylesheet" href="assets/css/games/dots-and-boxes.css" />
+    <script src="assets/js/games/connect-four.js" defer></script>
+    <script src="assets/js/games/dots-and-boxes.js" defer></script>
     <script src="assets/js/app.js" defer></script>
   </head>
   <body>
@@ -29,8 +33,18 @@
         <div class="side-rule"></div>
         <div class="side-label">Quick start</div>
         <button class="quick-game" type="button" data-quick-game="ttt">
-          <span class="quick-symbols" aria-hidden="true"><b>X</b><b>O</b></span>
+          <span class="quick-game-art tone-green" data-quick-art="ttt" aria-hidden="true"></span>
           <span><strong>Tic-Tac-Toe</strong><small>One quick round</small></span>
+          <span class="quick-arrow" aria-hidden="true">↗</span>
+        </button>
+        <button class="quick-game" type="button" data-quick-game="connect-four">
+          <span class="quick-game-art tone-green" data-quick-art="connect-four" aria-hidden="true"></span>
+          <span><strong>Connect Four</strong><small>Drop four in a row</small></span>
+          <span class="quick-arrow" aria-hidden="true">↗</span>
+        </button>
+        <button class="quick-game" type="button" data-quick-game="dots">
+          <span class="quick-game-art tone-gold" data-quick-art="dots" aria-hidden="true"></span>
+          <span><strong>Dots &amp; boxes</strong><small>Claim the most squares</small></span>
           <span class="quick-arrow" aria-hidden="true">↗</span>
         </button>
 
@@ -55,9 +69,9 @@
           <div class="breadcrumb"><span>GAME NIGHT</span><span class="breadcrumb-divider">/</span><span id="section-name">DISCOVER</span></div>
           <div class="topbar-actions">
             <button class="sync-button" id="pending-moves-button" type="button" hidden><span aria-hidden="true">⇅</span><span id="pending-moves-count">0 pending</span></button>
-            <button class="connection-pill" id="connection-pill" type="button"><i aria-hidden="true"></i><span>Local demo</span></button>
             <button class="icon-button theme-toggle-top" id="top-theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">☾</button>
             <button class="icon-button top-settings" id="top-settings-button" type="button" aria-label="Connection settings" title="Connection settings">⚙</button>
+            <button class="connection-pill" id="connection-pill" type="button"><i aria-hidden="true"></i><span>Local demo</span></button>
             <div class="top-profile-wrap" id="top-profile-wrap" hidden>
               <button class="top-profile-trigger" id="top-profile-trigger" type="button" aria-label="Open profile menu" aria-haspopup="menu" aria-expanded="false">
                 <span class="top-profile-avatar avatar" id="top-profile-avatar" aria-hidden="true">A</span><span class="top-profile-name" id="top-profile-name">Player</span><span class="top-profile-chevron" aria-hidden="true">⌄</span>
@@ -256,6 +270,7 @@
           <div class="play-topline"><button class="back-button" type="button" data-switch-view="matches"><span aria-hidden="true">←</span> My matches</button><span class="play-mode-label" id="play-mode-label">LOCAL GAME</span></div>
           <div class="play-layout">
             <section class="board-panel">
+              <div class="round-result" id="round-result" role="status" hidden><span class="round-result-mark" aria-hidden="true">✓</span><span><small>FINAL RESULT</small><strong id="round-result-title">You win</strong></span></div>
               <div class="turn-banner" id="turn-banner"><span class="turn-mark">X</span><span><small>UP TO YOU</small><strong>Your turn</strong></span></div>
               <div class="handoff-panel" id="handoff-panel" hidden><p class="eyebrow">PASS-AND-PLAY</p><h2 id="handoff-title">Pass the device</h2><button class="button button-dark" id="handoff-button" type="button">I am Player 2 · reveal board</button></div>
               <div class="live-board" id="live-board" role="group" aria-label="Tic-Tac-Toe board"></div>
@@ -268,7 +283,7 @@
               <div class="info-divider"></div>
               <div class="match-state-line"><span class="state-pulse"></span><span id="match-state-text">Waiting for your move</span></div>
               <button class="text-button" id="rematch-button" type="button" hidden>Play another round <span aria-hidden="true">→</span></button>
-              <div class="privacy-note"><span aria-hidden="true">◈</span><span>Moves are shared with this match. Your game state stays in sync.</span></div>
+              <div class="privacy-note"><span aria-hidden="true">◈</span><span id="play-privacy-copy">Moves are shared with this match. Your game state stays in sync.</span></div>
             </aside>
           </div>
         </section>
@@ -289,13 +304,13 @@
         <label class="mode-option"><input type="radio" name="play-mode" value="real-time" /><span class="mode-icon">⇄</span><span><strong>Real-time</strong><small>Stay together in a turn-based match</small></span><span class="radio-dot"></span></label>
       </fieldset>
       <section class="online-invite-setup" id="online-invite-setup" aria-labelledby="invite-setup-title" hidden>
-        <div class="profile-panel-heading"><div><p class="eyebrow">LOBBY SETUP</p><h3 id="invite-setup-title">Who can join?</h3></div></div>
+        <div class="profile-panel-heading"><div><p class="eyebrow" id="invite-setup-eyebrow">LOBBY SETUP</p><h3 id="invite-setup-title">Who can join?</h3></div></div>
         <fieldset class="invite-kind-options">
           <label class="invite-kind-option selected"><input type="radio" name="invite-kind" value="friend" checked /><span class="invite-kind-icon" aria-hidden="true">◎</span><span><strong>Invite a friend</strong><small>Choose someone you know</small></span></label>
           <label class="invite-kind-option"><input type="radio" name="invite-kind" value="open" /><span class="invite-kind-icon" aria-hidden="true">◌</span><span><strong>Open to strangers</strong><small>Let another player find this table</small></span></label>
         </fieldset>
         <div class="friend-choice-row" id="friend-choice-row"><label class="field-label" for="invite-friend">Friend</label><select class="field-select" id="invite-friend"><option value="Mina">Mina Chen</option><option value="Jordan">Jordan Lee</option><option value="Riley">Riley Morgan</option></select></div>
-        <div class="open-lobby-note" id="open-lobby-note" hidden><strong>Public demo lobby</strong><span>Anyone can appear as a simulated guest. No invitation is actually sent.</span></div>
+        <div class="open-lobby-note" id="open-lobby-note" hidden><strong id="open-lobby-title">Public demo lobby</strong><span id="open-lobby-description">Anyone can appear as a simulated guest. No invitation is actually sent.</span></div>
         <p class="online-backend-note" id="online-backend-note" hidden>Connected API lobbies are created as OPEN. The friend selector is only used by local demo lobbies.</p>
       </section>
       <div class="dialog-feedback" id="create-feedback" role="status"></div>

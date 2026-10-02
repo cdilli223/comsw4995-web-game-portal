@@ -1,5 +1,5 @@
-const CACHE_NAME = 'gameportal-shell-v26';
-const APP_ASSETS = ['./', './index.html', './assets/css/styles.css', './assets/js/app.js'];
+const CACHE_NAME = 'gameportal-shell-v41';
+const APP_ASSETS = ['./', './index.html', './assets/css/styles.css?v=35', './assets/css/games/connect-four.css', './assets/css/games/dots-and-boxes.css', './assets/js/app.js', './assets/js/games/connect-four.js', './assets/js/games/dots-and-boxes.js'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME)

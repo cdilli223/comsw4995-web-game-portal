@@ -15,8 +15,8 @@
     { id: 'ttt', title: 'Tic-Tac-Toe', description: 'Three in a row. A tiny game with room for rematches.', category: 'quick', players: '2 players', duration: '3 min', offline: true, art: 'board', tone: 'tone-green', playable: true, allowedPlayers: [2] },
     { id: 'poker', title: 'Poker', description: 'Read the table, make your move, and see it through.', category: 'cards', players: '2-10 players', duration: '15 min', offline: false, art: 'cards', tone: 'tone-coral', playable: false, allowedPlayers: [2, 3, 4, 5, 6, 7, 8, 9, 10] },
     { id: 'checkers', title: 'Chinese checkers', description: 'Cross the board. Plan a few jumps ahead.', category: 'strategy', players: '2, 3 or 6', duration: '20 min', offline: false, art: 'checkers', tone: 'tone-blue', playable: false, allowedPlayers: [2, 3, 6] },
-    { id: 'dots', title: 'Dots & boxes', description: 'Claim a square, then keep the chain going.', category: 'quick', players: '2 players', duration: '5 min', offline: false, art: 'board', tone: 'tone-gold', playable: false, allowedPlayers: [2] },
-    { id: 'connect-four', title: 'Connect Four', description: 'Drop a disc. Set up the next four.', category: 'strategy', players: '2 players', duration: '5 min', offline: false, art: 'checkers', tone: 'tone-green', playable: false, allowedPlayers: [2] },
+    { id: 'dots', title: 'Dots & boxes', description: 'Claim a square, then keep the chain going.', category: 'quick', players: '2 players', duration: '5 min', offline: true, art: 'board', tone: 'tone-gold', playable: true, allowedPlayers: [2] },
+    { id: 'connect-four', title: 'Connect Four', description: 'Drop a disc. Set up the next four.', category: 'strategy', players: '2 players', duration: '5 min', offline: true, art: 'checkers', tone: 'tone-green', playable: true, allowedPlayers: [2] },
     { id: 'memory', title: 'Memory match', description: 'Find the pairs before the other player does.', category: 'cards', players: '2 players', duration: '7 min', offline: false, art: 'cards', tone: 'tone-blue', playable: false, allowedPlayers: [2] },
   ];
 
@@ -27,7 +27,7 @@
     currentUser: null,
     demoProfile: readDemoProfile(),
     language: localStorage.getItem(LANGUAGE_KEY) || 'en',
-    profileSettings: readProfileSettings(),
+    profileSettings: null,
     mockMessages: readMockMessages(),
     selectedConversationId: '',
     demoLobby: null,
@@ -47,9 +47,20 @@
     toastTimer: null,
   };
 
+  state.profileSettings = readProfileSettings(profileSettingsIdentity(null, state.demoProfile), state.demoProfile.displayName);
+
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const safeText = (value, fallback = '') => typeof value === 'string' && value.trim() ? value.trim() : fallback;
+  function profileSettingsIdentity(user, demoProfile) {
+    return user
+      ? `user:${String(user.id || user.email || user.displayName)}`
+      : `demo:${String(demoProfile.displayName || 'Guest player').toLowerCase()}`;
+  }
+
+  function profileSettingsStorageKey(identity) {
+    return `${PROFILE_SETTINGS_KEY}:${encodeURIComponent(identity)}`;
+  }
   const avatarPresetMarks = { initials: '', sun: '✷', orbit: '◉', grid: '▦' };
 
   function renderUserAvatar(element, name) {
@@ -102,8 +113,7 @@
     }
   }
 
-  function readProfileSettings() {
-    const profileName = readDemoProfile().displayName;
+  function readProfileSettings(identity, profileName) {
     const username = profileName.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '') || 'player';
     const defaults = {
       username,
@@ -117,7 +127,16 @@
       notifications: { matchUpdates: true, invitations: true, productNews: false },
     };
     try {
-      const saved = JSON.parse(localStorage.getItem(PROFILE_SETTINGS_KEY) || 'null');
+      const scopedKey = profileSettingsStorageKey(identity);
+      let serializedSettings = localStorage.getItem(scopedKey);
+      if (!serializedSettings) {
+        serializedSettings = localStorage.getItem(PROFILE_SETTINGS_KEY);
+        if (serializedSettings) {
+          localStorage.setItem(scopedKey, serializedSettings);
+          localStorage.removeItem(PROFILE_SETTINGS_KEY);
+        }
+      }
+      const saved = JSON.parse(serializedSettings || 'null');
       if (!saved || typeof saved !== 'object') return defaults;
       return {
         ...defaults,
@@ -158,7 +177,8 @@
   }
 
   function persistProfileSettings() {
-    localStorage.setItem(PROFILE_SETTINGS_KEY, JSON.stringify(state.profileSettings));
+    const identity = profileSettingsIdentity(state.currentUser, state.demoProfile);
+    localStorage.setItem(profileSettingsStorageKey(identity), JSON.stringify(state.profileSettings));
   }
 
   function persistMockMessages() {
@@ -188,6 +208,16 @@
   }
 
   function createDemoMatches() {
+    const connectFourState = window.portalGames['connect-four'].createState();
+    [0, 3, 1, 4, 2, 5].forEach((column) => window.portalGames['connect-four'].applyMove(connectFourState, column));
+    const dotsState = window.portalGames.dots.createState();
+    [
+      { orientation: 'h', row: 0, column: 0 },
+      { orientation: 'v', row: 0, column: 0 },
+      { orientation: 'h', row: 1, column: 1 },
+      { orientation: 'v', row: 1, column: 2 },
+      { orientation: 'h', row: 0, column: 2 },
+    ].forEach((move) => window.portalGames.dots.applyMove(dotsState, move));
     return [
       { id: 'sample-match-42', title: 'Tic-Tac-Toe', gameId: 'ttt', status: 'active', mode: 'PING_PONG', opponent: 'Alex', version: 18, state: { board: ['X', null, 'O', null, null, null, null, null, null] }, turnPlayerIndex: 0, myPlayerIndex: 0, remote: true, isMock: true, isCurrentUserPlayer: true, gameEngineKey: 'tic-tac-toe', previewText: 'Your turn · Match #42 · Last update just now', createdAt: new Date().toISOString() },
       { id: 'sample-poker-friday', title: 'Poker · Friday table', gameId: 'poker', status: 'active', mode: 'PING_PONG', opponent: 'Riley', version: 31, state: null, turnPlayerIndex: 1, myPlayerIndex: 0, remote: true, isMock: true, isCurrentUserPlayer: true, gameEngineKey: '', previewText: 'Riley is thinking… · Your move follows', createdAt: new Date().toISOString() },
@@ -195,6 +225,8 @@
       { id: 'sample-poker-local', title: 'Poker · Pass-and-play · 3 players', gameId: 'poker', status: 'finished', mode: 'PASS_AND_PLAY', opponent: '2 players', version: 12, state: null, turnPlayerIndex: null, myPlayerIndex: 0, remote: false, isMock: true, previewText: 'Finished on this device', createdAt: new Date().toISOString() },
       { id: 'sample-lobby-ttt-open', title: 'Tic-Tac-Toe · Open table', gameId: 'ttt', status: 'lobby', mode: 'PING_PONG', opponent: 'Mina', version: 0, state: null, turnPlayerIndex: null, myPlayerIndex: null, remote: true, isMock: true, isCurrentUserPlayer: false, previewText: 'Open ping-pong table · 1 of 2 players · Join policy: OPEN', createdAt: new Date().toISOString() },
       { id: 'sample-lobby-checkers', title: 'Chinese checkers · Open table', gameId: 'checkers', status: 'lobby', mode: 'REAL_TIME', opponent: 'Kai', version: 0, state: null, turnPlayerIndex: null, myPlayerIndex: null, remote: true, isMock: true, isCurrentUserPlayer: false, previewText: 'Open real-time table · 2 of 6 players · Waiting for more players', createdAt: new Date().toISOString() },
+      { id: 'sample-watch-connect-four', title: 'Connect Four · Public table', gameId: 'connect-four', status: 'active', mode: 'REAL_TIME', opponent: 'Mina vs. Alex', version: 6, state: connectFourState, turnPlayerIndex: connectFourState.turn, myPlayerIndex: null, remote: true, isMock: true, isDemoPublic: true, isCurrentUserPlayer: false, isSpectator: true, capabilities: { spectators: true }, gameEngineKey: 'connect-four', raw: { id: 'sample-watch-connect-four', players: [{ userId: 'demo-mina', playerIndex: 0, displayName: 'Mina' }, { userId: 'demo-alex', playerIndex: 1, displayName: 'Alex' }], publicView: connectFourState }, previewText: 'Real-time public demo · 2 players · Watch only', createdAt: new Date().toISOString() },
+      { id: 'sample-watch-dots', title: 'Dots & Boxes · Public table', gameId: 'dots', status: 'active', mode: 'PING_PONG', opponent: 'Jordan vs. Riley', version: 5, state: dotsState, turnPlayerIndex: dotsState.turn, myPlayerIndex: null, remote: true, isMock: true, isDemoPublic: true, isCurrentUserPlayer: false, isSpectator: true, capabilities: { spectators: true }, gameEngineKey: 'dots', raw: { id: 'sample-watch-dots', players: [{ userId: 'demo-jordan', playerIndex: 0, displayName: 'Jordan' }, { userId: 'demo-riley', playerIndex: 1, displayName: 'Riley' }], publicView: dotsState }, previewText: 'Ping-pong public demo · 2 players · Watch only', createdAt: new Date().toISOString() },
     ];
   }
 
@@ -533,6 +565,7 @@
     if (state.authToken) clearSession();
     state.currentUser = null;
     state.demoProfile = { displayName, provider, signedIn: true };
+    state.profileSettings = readProfileSettings(profileSettingsIdentity(null, state.demoProfile), displayName);
     localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(state.demoProfile));
     ensureDemoMatches();
     renderIdentity();
@@ -545,6 +578,7 @@
     state.authToken = '';
     state.currentUser = null;
     state.demoProfile = { displayName: 'Guest player', provider: 'Guest', signedIn: false };
+    state.profileSettings = readProfileSettings(profileSettingsIdentity(null, state.demoProfile), state.demoProfile.displayName);
     localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(state.demoProfile));
     sessionStorage.removeItem(TOKEN_KEY);
     state.matches = state.matches.filter((match) => !match.remote);
@@ -641,23 +675,63 @@
     return element;
   }
 
-  function drawCardArt(game) {
-    const art = makeElement('div', `card-art ${game.tone || 'tone-gold'}`);
-    art.append(makeElement('span', 'card-art-label', game.category === 'all' ? 'PUBLISHED' : String(game.category || 'GAME').toUpperCase()));
+  function drawGameMotif(game) {
+    if (game.id === 'connect-four') {
+      const board = makeElement('div', 'connect-four-art');
+      const redDiscs = new Set(['4-1', '4-2', '5-1', '5-2', '5-3', '5-4']);
+      const yellowDiscs = new Set(['3-2', '4-3', '4-4', '5-5']);
+      for (let row = 0; row < 6; row += 1) {
+        for (let column = 0; column < 7; column += 1) {
+          const key = `${row}-${column}`;
+          board.append(makeElement('span', `connect-four-art-cell${redDiscs.has(key) ? ' red' : yellowDiscs.has(key) ? ' yellow' : ''}`));
+        }
+      }
+      return board;
+    }
+    if (game.id === 'dots') {
+      const board = makeElement('div', 'dots-boxes-art');
+      const claimedEdges = new Set(['0-1', '2-1', '2-3', '4-3', '6-3', '1-0', '3-0', '3-2', '5-2', '5-4']);
+      const claimedBoxes = new Set(['1-1', '3-1', '3-3', '5-3']);
+      for (let row = 0; row < 7; row += 1) {
+        for (let column = 0; column < 7; column += 1) {
+          const key = `${row}-${column}`;
+          const isDot = row % 2 === 0 && column % 2 === 0;
+          const isEdge = row % 2 === 0 ? column % 2 === 1 : column % 2 === 0;
+          const isBox = row % 2 === 1 && column % 2 === 1;
+          const claimedBox = isBox && claimedBoxes.has(key);
+          const boxOwner = (Math.floor(row / 2) + Math.floor(column / 2)) % 2 === 0 ? 'red' : 'blue';
+          const orientation = row % 2 === 0 ? 'horizontal' : 'vertical';
+          board.append(makeElement('span', `dots-boxes-art-cell${isDot ? ' dot' : isEdge && claimedEdges.has(key) ? ` edge ${orientation}` : claimedBox ? ` box claimed ${boxOwner}` : ''}`));
+        }
+      }
+      return board;
+    }
     if (game.art === 'cards') {
       const pile = makeElement('div', 'cards-art');
       pile.append(makeElement('span', 'playing-card', 'A'), makeElement('span', 'playing-card', 'K'));
-      art.append(pile);
+      return pile;
     } else if (game.art === 'checkers') {
       const board = makeElement('div', 'checker-art');
       for (let index = 0; index < 16; index += 1) board.append(makeElement('span'));
-      art.append(board);
-    } else {
-      const board = makeElement('div', 'mini-board');
-      ['X', '', 'O', '', 'X', '', 'O', '', ''].forEach((value) => board.append(makeElement('span', '', value)));
-      art.append(board);
+      return board;
     }
+    const board = makeElement('div', 'mini-board');
+    ['X', '', 'O', '', 'X', '', 'O', '', ''].forEach((value) => board.append(makeElement('span', '', value)));
+    return board;
+  }
+
+  function drawCardArt(game) {
+    const art = makeElement('div', `card-art ${game.tone || 'tone-gold'}`);
+    art.append(makeElement('span', 'card-art-label', game.category === 'all' ? 'PUBLISHED' : String(game.category || 'GAME').toUpperCase()));
+    art.append(drawGameMotif(game));
     return art;
+  }
+
+  function renderQuickStartArt() {
+    $$('[data-quick-art]').forEach((slot) => {
+      const game = gameCatalog.find((item) => item.id === slot.dataset.quickArt);
+      if (game) slot.replaceChildren(drawGameMotif(game));
+    });
   }
 
   function renderGameMockup(game) {
@@ -768,22 +842,31 @@
       const row = makeElement('article', 'match-row');
       const thumb = makeElement('div', `match-thumb ${match.title.toLowerCase().includes('poker') ? 'coral' : match.title.toLowerCase().includes('check') ? 'blue' : ''}`, match.title.toLowerCase().includes('poker') ? 'A K' : match.title.toLowerCase().includes('check') ? '●' : 'X O');
       const main = makeElement('div', 'match-main');
-      const modeLabel = match.remote ? (String(match.mode).toUpperCase() === 'REAL_TIME' ? 'Real-time' : 'Ping-pong') : ['PASS_AND_PLAY', 'pass-and-play'].includes(match.mode) ? 'Pass-and-play' : match.mode === 'computer' ? 'Vs. computer' : 'Sample match';
-      main.append(makeElement('strong', '', match.title), makeElement('small', '', `${match.isMock ? 'Design mockup' : modeLabel} · ${match.isMock ? 'Fictional data' : match.remote ? 'Synced to backend' : 'Saved on this device'}`));
+      const modeLabel = match.isRealTimeDemo ? 'Real-time · Demo opponent' : match.remote || match.isDemoOnline ? (String(match.mode).toUpperCase() === 'REAL_TIME' ? 'Real-time' : 'Ping-pong') : ['PASS_AND_PLAY', 'pass-and-play'].includes(match.mode) ? 'Pass-and-play' : match.mode === 'computer' ? 'Vs. computer' : 'Sample match';
+      main.append(makeElement('strong', '', match.title), makeElement('small', '', match.isRealTimeDemo ? `${modeLabel} · Local game` : match.isDemoOnline ? `${modeLabel} · Demo table` : `${match.isMock ? 'Design mockup' : modeLabel} · ${match.isMock ? 'Fictional data' : match.remote ? 'Synced to backend' : 'Saved on this device'}`));
       const opponent = makeElement('div', 'match-opponent');
       opponent.append(makeElement('strong', '', match.opponent || 'Your table'), makeElement('small', '', match.status === 'lobby' ? 'Waiting for players' : match.status === 'finished' ? 'Round complete' : 'Last update just now'));
-      const isYourTurn = match.remote ? match.isCurrentUserPlayer && match.turnPlayerIndex === match.myPlayerIndex : match.mode === 'computer' ? true : match.mode === 'pass-and-play' && match.state && match.state.turn === 0;
+      const isYourTurn = match.remote ? match.isCurrentUserPlayer && match.turnPlayerIndex === match.myPlayerIndex : match.isRealTimeDemo ? match.state && match.state.turn === 0 : match.mode === 'computer' ? true : match.mode === 'pass-and-play' && match.state && match.state.turn === 0;
       const activeLabel = currentPendingMoves().some((move) => move.matchId === match.id) ? 'QUEUED' : match.isSpectator ? 'WATCHING' : isYourTurn ? 'YOUR TURN' : 'WAITING';
       const statusLabel = makeElement('span', `match-status ${match.status === 'finished' ? 'finished' : match.status === 'lobby' ? 'lobby' : ''}`, match.status === 'active' ? activeLabel : match.status.toUpperCase());
       const isOwner = match.remote && state.currentUser && match.ownerUserId === state.currentUser.id;
       const rosterSize = Array.isArray(match.raw && match.raw.players) ? match.raw.players.filter((player) => String(player.status).toUpperCase() !== 'LEFT').length : 0;
       const game = state.games.find((item) => item.id === match.gameId);
       const requiredPlayers = game && game.allowedPlayers && game.allowedPlayers[0] ? game.allowedPlayers[0] : 2;
-      const actionLabel = match.isMock ? match.status === 'lobby' ? 'View lobby' : 'Preview' : match.status !== 'lobby' ? (match.status === 'finished' ? 'Review' : 'Open') : !match.remote ? 'Start' : !isOwner ? match.isCurrentUserPlayer ? 'Waiting' : 'Join' : rosterSize < requiredPlayers ? 'Copy invite' : 'Start';
+      const actionLabel = match.isDemoOnline ? match.status === 'lobby' ? 'View lobby' : 'Open' : match.isMock ? match.status === 'lobby' ? 'View lobby' : match.isSpectator ? 'Watch' : 'Preview' : match.status !== 'lobby' ? (match.status === 'finished' ? 'Review' : 'Open') : !match.remote ? 'Start' : !isOwner ? match.isCurrentUserPlayer ? 'Waiting' : 'Join' : rosterSize < requiredPlayers ? 'Copy invite' : 'Start';
       const action = makeElement('button', 'match-open', actionLabel);
       action.type = 'button';
       action.disabled = actionLabel === 'Waiting';
-      action.addEventListener('click', () => match.isMock ? openMockMatch(match) : actionLabel === 'Copy invite' ? copyInviteLink(match) : handleMatchAction(match));
+      action.addEventListener('click', () => {
+        if (match.isDemoOnline) {
+          if (match.status === 'lobby') openDemoLobby(match);
+          else openMatch(match);
+        } else if (match.isMock) {
+          if (match.isSpectator) openMatch(match);
+          else openMockMatch(match);
+        } else if (actionLabel === 'Copy invite') copyInviteLink(match);
+        else handleMatchAction(match);
+      });
       const menu = makeElement('button', 'match-menu', '···');
       menu.type = 'button';
       menu.setAttribute('aria-label', 'Match actions');
@@ -830,21 +913,27 @@
   }
 
   function updateCreateMode() {
-    const online = ['ping-pong', 'real-time'].includes(selectedMode());
+    const mode = selectedMode();
+    const online = ['ping-pong', 'real-time'].includes(mode);
+    const realTimeDemo = mode === 'real-time';
     const section = $('#online-invite-setup');
     section.hidden = !online;
-    $('#create-submit-label').textContent = online ? 'Create lobby' : 'Create match';
+    $('#create-submit-label').textContent = realTimeDemo ? 'Start real-time demo' : mode === 'ping-pong' ? 'Create lobby' : 'Create match';
+    $('#invite-setup-eyebrow').textContent = realTimeDemo ? 'DEMO OPPONENT' : 'LOBBY SETUP';
+    $('#invite-setup-title').textContent = realTimeDemo ? 'Choose a player identity' : 'Who can join?';
     const inviteKind = $('input[name="invite-kind"]:checked').value;
     const friendChoiceRow = $('#friend-choice-row');
     friendChoiceRow.hidden = inviteKind !== 'friend';
     $('#open-lobby-note').hidden = inviteKind !== 'open';
     $$('.invite-kind-option').forEach((option) => option.classList.toggle('selected', $('input', option).checked));
     const game = state.games.find((item) => item.id === $('#create-game').value);
-    const backendReady = Boolean(normalizedBase() && state.authToken && game && game.gameVersionId && !game.isMock);
-    $('#online-backend-note').hidden = !online || !backendReady;
+    const backendReady = Boolean(mode === 'ping-pong' && normalizedBase() && state.authToken && game && game.gameVersionId && !game.isMock);
+    $('#online-backend-note').hidden = mode !== 'ping-pong' || !backendReady;
     $('.invite-kind-options').hidden = backendReady;
     friendChoiceRow.hidden = backendReady || inviteKind !== 'friend';
     $('#open-lobby-note').hidden = backendReady || inviteKind !== 'open';
+    $('#open-lobby-title').textContent = realTimeDemo ? 'Simulated opponent' : 'Public demo lobby';
+    $('#open-lobby-description').textContent = realTimeDemo ? 'The game AI controls this demo seat; no stranger is connected.' : 'Anyone can appear as a simulated guest. No invitation is actually sent.';
   }
 
   function makeDemoOnlineLobby(game, mode) {
@@ -887,7 +976,9 @@
       handoffPending: false,
       opponent: mode === 'computer' ? 'Computer' : mode === 'pass-and-play' ? 'Player 2' : 'Waiting for players',
       version: 0,
-      state: game.id === 'ttt' ? { board: Array(9).fill(null), turn: 0, winner: null, winningLine: [] } : null,
+      state: game.id === 'ttt'
+        ? { board: Array(9).fill(null), turn: 0, winner: null, winningLine: [] }
+        : window.portalGames && window.portalGames[game.id] ? window.portalGames[game.id].createState() : null,
       turnPlayerIndex: 0,
       myPlayerIndex: 0,
       remote: false,
@@ -905,14 +996,24 @@
     $('#create-feedback').textContent = '';
     try {
       let match;
-      if (mode === 'ping-pong' || mode === 'real-time') {
+      if (mode === 'real-time') {
+        if (!game.playable) throw new Error('This game does not have a local real-time demo yet.');
+        const inviteKind = $('input[name="invite-kind"]:checked').value;
+        const selectedName = inviteKind === 'friend' ? $('#invite-friend').value : 'Demo stranger';
+        match = makeLocalMatch(game, 'computer');
+        match.isRealTimeDemo = true;
+        match.inviteKind = inviteKind;
+        match.invitee = selectedName;
+        match.opponent = `${selectedName} · Demo`;
+        match.previewText = `Real-time demo · Computer-controlled ${selectedName} · Local only`;
+      } else if (mode === 'ping-pong') {
         const backendReady = Boolean(normalizedBase() && state.authToken && game.gameVersionId && !game.isMock);
         if (!backendReady) {
           match = makeDemoOnlineLobby(game, mode);
         } else {
           const result = await apiRequest('/matches', {
             method: 'POST',
-            body: JSON.stringify({ gameVersionId: game.gameVersionId, mode: mode === 'real-time' ? 'REAL_TIME' : 'PING_PONG', joinPolicy: 'OPEN' }),
+            body: JSON.stringify({ gameVersionId: game.gameVersionId, mode: 'PING_PONG', joinPolicy: 'OPEN' }),
           });
           match = normalizeMatch(result.match || result.data || result);
           if (!match) throw new Error('The API created a match but returned no match ID. Check the create-match response contract.');
@@ -965,20 +1066,64 @@
     return findWinning('O') ?? findWinning('X') ?? (available.includes(4) ? 4 : available.find((cell) => [0, 2, 6, 8].includes(cell)) ?? available[0]);
   }
 
+  function usesLocalHandoff(match) {
+    return match.mode === 'pass-and-play' || (match.isDemoOnline && match.status === 'active');
+  }
+
+  function playLocalBoardMove(match, gameModule, move) {
+    const gameState = match.state;
+    const previousTurn = gameState.turn;
+    if (match.status !== 'active' || (match.mode === 'computer' && gameState.turn !== 0) || !gameModule.applyMove(gameState, move)) return;
+    match.version += 1;
+    match.updatedAt = new Date().toISOString();
+    if (gameModule.isOver(gameState)) {
+      match.status = 'finished';
+      match.handoffPending = false;
+    } else {
+      match.handoffPending = usesLocalHandoff(match) && gameState.turn !== previousTurn;
+    }
+    persistMatches();
+    renderPlay(match);
+    if (match.status === 'active' && match.mode === 'computer' && gameState.turn === 1) {
+      const playComputerTurn = () => {
+        $('#board-hint').textContent = 'The computer is choosing a move…';
+        window.setTimeout(() => {
+          if (state.currentMatch !== match || match.status !== 'active') return;
+          const computerMove = gameModule.chooseComputerMove(gameState);
+          if (computerMove !== null && computerMove !== undefined) gameModule.applyMove(gameState, computerMove);
+          match.version += 1;
+          match.updatedAt = new Date().toISOString();
+          if (gameModule.isOver(gameState)) match.status = 'finished';
+          persistMatches();
+          renderPlay(match);
+          if (match.status === 'active' && match.mode === 'computer' && gameState.turn === 1) playComputerTurn();
+        }, 380);
+      };
+      playComputerTurn();
+    }
+  }
+
   function playLocalMove(match, cell) {
     if (match.remote) {
       submitRemoteMove(match, cell);
       return;
     }
+    const gameModule = window.portalGames && window.portalGames[match.gameId];
+    if (gameModule) {
+      playLocalBoardMove(match, gameModule, cell);
+      return;
+    }
     const gameState = match.state;
     if (match.status !== 'active' || (match.mode === 'computer' && gameState.turn !== 0) || gameState.board[cell]) return;
-    const mark = match.mode === 'pass-and-play' && gameState.turn === 1 ? 'O' : 'X';
+    const previousTurn = gameState.turn;
+    const alternatesPlayers = usesLocalHandoff(match);
+    const mark = alternatesPlayers && gameState.turn === 1 ? 'O' : 'X';
     gameState.board[cell] = mark;
-    gameState.turn = match.mode === 'pass-and-play' ? 1 - gameState.turn : 1;
+    gameState.turn = alternatesPlayers ? 1 - gameState.turn : 1;
     match.version += 1;
     const firstResult = localResult(match);
     if (firstResult) finishLocalMatch(match, firstResult);
-    match.handoffPending = match.mode === 'pass-and-play' && match.status === 'active';
+    match.handoffPending = match.status === 'active' && usesLocalHandoff(match) && gameState.turn !== previousTurn;
     renderPlay(match);
     if (match.status === 'active' && match.mode === 'computer') {
       $('#board-hint').textContent = 'The computer is choosing a move…';
@@ -1007,41 +1152,67 @@
     match.updatedAt = new Date().toISOString();
   }
 
+  function finishedResultLabel(match, gameState) {
+    if (gameState.isDraw || gameState.winner === null || gameState.winner === undefined) return 'Draw game';
+    const winner = gameState.winner === 'O' ? 1 : gameState.winner === 'X' ? 0 : Number(gameState.winner);
+    if (match.remote) {
+      if (winner === match.myPlayerIndex) return 'You win';
+      const players = Array.isArray(match.raw && match.raw.players) ? match.raw.players : [];
+      const player = players.find((item, index) => (item.playerIndex ?? item.player_index ?? index) === winner);
+      return safeText(player && (player.displayName || player.display_name || player.name), match.opponent || `Player ${winner + 1}`) + ' wins';
+    }
+    if (winner === 0) return 'You win';
+    if (match.isRealTimeDemo) return `${match.opponent} wins`;
+    return match.mode === 'computer' ? 'Computer wins' : 'Player 2 wins';
+  }
+
   function renderPlay(match) {
     state.currentMatch = match;
-    const gameState = match.state || { board: Array(9).fill(null), turn: 0, winner: null, winningLine: [] };
+    const gameModule = (!match.remote || match.isMock) && window.portalGames && window.portalGames[match.gameId];
+    const gameState = match.state || (gameModule ? gameModule.createState() : { board: Array(9).fill(null), turn: 0, winner: null, winningLine: [] });
+    if (!match.state && gameModule) match.state = gameState;
     const board = $('#live-board');
     board.replaceChildren();
+    board.setAttribute('aria-label', `${match.title} board`);
     const local = !match.remote;
     const isOver = match.status === 'finished';
+    const finishLabel = isOver ? finishedResultLabel(match, gameState) : '';
     const current = gameState.turn ?? match.turnPlayerIndex ?? 0;
-    const handoffPending = local && match.mode === 'pass-and-play' && match.handoffPending && !isOver;
+    const handoffPending = local && usesLocalHandoff(match) && match.handoffPending && !isOver;
     board.hidden = handoffPending;
-    $('#turn-banner').hidden = handoffPending;
+    $('#turn-banner').hidden = handoffPending || isOver;
+    $('#round-result').hidden = !isOver;
+    if (isOver) $('#round-result-title').textContent = finishLabel;
     $('#handoff-panel').hidden = !handoffPending;
     $('#handoff-title').textContent = `Pass the device to Player ${current + 1}`;
     $('#handoff-button').textContent = `I am Player ${current + 1} · reveal board`;
     const remoteTicTacToe = match.remote && match.gameEngineKey === 'tic-tac-toe' && Array.isArray(gameState.board) && gameState.board.length === 9;
     const result = local && match.gameId === 'ttt' ? localResult(match) : null;
     const winningLine = gameState.winningLine || (result && result.line) || [];
-    for (let index = 0; index < 9; index += 1) {
-      const cell = makeElement('button', `board-cell ${gameState.board[index] ? gameState.board[index].toLowerCase() : ''}${winningLine.includes(index) ? ' winning' : ''}`, gameState.board[index] || '');
-      cell.type = 'button';
-      cell.disabled = (!local && !remoteTicTacToe) || match.isSpectator || isOver || Boolean(gameState.board[index]) || (match.remote && current !== match.myPlayerIndex) || (local && match.mode === 'computer' && current !== 0) || Boolean(match.pendingMove);
-      const markToPlay = match.mode === 'pass-and-play' && current === 1 ? 'O' : 'X';
-      cell.setAttribute('aria-label', gameState.board[index] ? `Cell ${index + 1}: ${gameState.board[index]}` : `Place ${markToPlay} in cell ${index + 1}`);
-      cell.addEventListener('click', () => playLocalMove(match, index));
-      board.append(cell);
+    if (gameModule) {
+      gameModule.renderBoard(board, gameState, (move) => playLocalMove(match, move));
+      if (match.isSpectator || (match.mode === 'computer' && current !== 0)) board.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+    } else {
+      for (let index = 0; index < 9; index += 1) {
+        const cell = makeElement('button', `board-cell ${gameState.board[index] ? gameState.board[index].toLowerCase() : ''}${winningLine.includes(index) ? ' winning' : ''}`, gameState.board[index] || '');
+        cell.type = 'button';
+        cell.disabled = (!local && !remoteTicTacToe) || match.isSpectator || isOver || Boolean(gameState.board[index]) || (match.remote && current !== match.myPlayerIndex) || (local && match.mode === 'computer' && current !== 0) || Boolean(match.pendingMove);
+        const markToPlay = match.mode === 'pass-and-play' && current === 1 ? 'O' : 'X';
+        cell.setAttribute('aria-label', gameState.board[index] ? `Cell ${index + 1}: ${gameState.board[index]}` : `Place ${markToPlay} in cell ${index + 1}`);
+        cell.addEventListener('click', () => playLocalMove(match, index));
+        board.append(cell);
+      }
     }
-    const mark = current === 1 ? 'O' : 'X';
+    const mark = gameModule ? gameModule.getCurrentMark(gameState) : current === 1 ? 'O' : 'X';
     const banner = $('#turn-banner');
     $('.turn-mark', banner).textContent = isOver ? '✓' : mark;
-    const myTurn = match.remote ? current === match.myPlayerIndex : current === 0;
-    $('small', banner).textContent = isOver ? 'ROUND COMPLETE' : myTurn ? 'UP TO YOU' : 'NEXT UP';
-    $('strong', banner).textContent = isOver ? 'Game over' : myTurn ? 'Your turn' : match.mode === 'computer' ? 'Computer turn' : match.remote ? 'Opponent turn' : 'Pass to Player 2';
+    const myTurn = match.isSpectator ? false : match.remote ? current === match.myPlayerIndex : current === 0;
+    $('small', banner).textContent = isOver ? 'ROUND COMPLETE' : match.isSpectator ? 'SPECTATOR' : myTurn ? 'UP TO YOU' : 'NEXT UP';
+    $('strong', banner).textContent = isOver ? 'Game over' : match.isSpectator ? 'Watching players' : myTurn ? 'Your turn' : match.isRealTimeDemo ? `${match.opponent} turn` : match.mode === 'computer' ? 'Computer turn' : match.isDemoOnline ? 'Invitee turn' : match.remote ? 'Opponent turn' : 'Pass to Player 2';
     $('#play-title').textContent = match.title;
-    $('#play-mode-label').textContent = match.remote ? 'ONLINE MATCH' : match.mode === 'pass-and-play' ? 'PASS-AND-PLAY' : 'LOCAL GAME';
-    $('#play-match-id').textContent = match.remote ? `Match #${match.id} · Version ${match.version}` : `Local match · ${new Date(match.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    $('#play-mode-label').textContent = match.isSpectator ? (match.isMock ? 'WATCHING · DEMO' : 'SPECTATOR VIEW') : match.isRealTimeDemo ? 'REAL-TIME · AI DEMO' : match.isDemoOnline ? `${String(match.mode).toUpperCase() === 'REAL_TIME' ? 'REAL-TIME' : 'PING-PONG'} · DEMO` : match.remote ? 'ONLINE MATCH' : match.mode === 'pass-and-play' ? 'PASS-AND-PLAY' : match.mode === 'computer' ? 'VS. COMPUTER' : 'LOCAL GAME';
+    $('#play-match-id').textContent = match.isSpectator && match.isMock ? 'Public demo · read-only' : match.remote ? `Match #${match.id} · Version ${match.version}` : match.isRealTimeDemo ? `Local real-time demo · ${match.opponent}` : match.isDemoOnline ? `Demo table · ${match.opponent || 'Open seat'}` : `Local match · ${new Date(match.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    $('#play-privacy-copy').textContent = match.isSpectator ? match.isMock ? 'Public sample state only. No live players or network match are connected.' : 'Only the game version’s public spectator view is shown.' : match.isRealTimeDemo ? 'The named opponent is simulated by the local game AI; no player is connected.' : match.isDemoOnline ? 'Invitation demo is local to this device; no network player can see these moves.' : 'Moves are shared with this match. Your game state stays in sync.';
     const players = $('#player-list');
     players.replaceChildren();
     const localName = state.currentUser ? state.currentUser.displayName : state.demoProfile.displayName;
@@ -1052,7 +1223,7 @@
       ? remotePlayers.map((player, index) => safeText(player.displayName || player.display_name || player.name, `Player ${index + 1}`))
       : match.remote
         ? [localName, match.opponent || 'Opponent']
-        : [localName, match.mode === 'computer' ? 'Computer' : 'Player 2'];
+        : [localName, match.isRealTimeDemo ? match.opponent : match.isDemoOnline ? match.opponent || 'Invitee' : match.mode === 'computer' ? 'Computer' : 'Player 2'];
     playerNames.forEach((name, index) => {
       const line = makeElement('div', 'player-line');
       const avatar = makeElement('span', `player-avatar${index === 1 ? ' o' : ''}`);
@@ -1063,8 +1234,8 @@
       line.append(avatar, mark, makeElement('strong', '', name), makeElement('small', '', !isOver && current === index ? 'To play' : isOver ? 'Finished' : 'Waiting'));
       players.append(line);
     });
-    $('#match-state-text').textContent = isOver ? (match.remote ? 'The backend has ended this match.' : gameState.winner === null ? 'It’s a draw.' : gameState.winner === 0 ? 'You won this round.' : 'Computer won this round.') : match.remote ? currentPendingMoves().some((move) => move.matchId === match.id) ? 'Queued · not confirmed by the server' : match.isSpectator ? 'Spectator view · public information' : current === match.myPlayerIndex ? `Your turn · Version ${match.version}` : `Waiting for opponent · Version ${match.version}` : match.mode === 'computer' ? (current === 0 ? 'Make a move to continue' : 'Computer is thinking') : current === 0 ? 'Choose a square' : 'Pass the device to Player 2';
-    $('#board-hint').textContent = isOver ? (local ? 'The board is saved in My matches.' : 'The backend has saved the final state.') : match.remote ? !remoteTicTacToe ? 'This backend engine has no portal view yet.' : match.pendingMove ? 'Submitting move to the backend…' : current === match.myPlayerIndex ? 'Choose an open square.' : 'Waiting for the other player.' : match.mode === 'pass-and-play' && current === 1 ? 'Player 2: take the device and choose a square.' : current === 1 ? 'The computer is choosing a move…' : 'Choose an open square.';
+    $('#match-state-text').textContent = isOver ? finishLabel : match.isSpectator ? (match.isMock ? 'Watching a public demo · read-only' : 'Spectator view · public information') : match.remote ? currentPendingMoves().some((move) => move.matchId === match.id) ? 'Queued · not confirmed by the server' : current === match.myPlayerIndex ? `Your turn · Version ${match.version}` : 'Waiting for opponent' : match.isRealTimeDemo ? current === 0 ? 'Make a move to continue' : `${match.opponent} is thinking` : match.mode === 'computer' ? (current === 0 ? 'Make a move to continue' : 'Computer is thinking') : current === 0 ? 'Choose a move' : match.isDemoOnline ? 'Invitee turn' : 'Pass the device to Player 2';
+    $('#board-hint').textContent = isOver ? `${finishLabel} · ${local ? 'The board is saved in My matches.' : 'The backend has saved the final state.'}` : match.isSpectator ? 'Watching the public game state. Moves are disabled.' : gameModule ? match.mode === 'computer' && current === 1 ? match.isRealTimeDemo ? `${match.opponent} is choosing a move…` : 'The computer is choosing a move…' : (match.mode === 'pass-and-play' || match.isDemoOnline) && current === 1 ? 'Player 2: take the device and make a move.' : gameModule.getTurnHint(gameState) : match.remote ? !remoteTicTacToe ? 'This backend engine has no portal view yet.' : match.pendingMove ? 'Submitting move to the backend…' : current === match.myPlayerIndex ? 'Choose an open square.' : 'Waiting for the other player.' : (match.mode === 'pass-and-play' || match.isDemoOnline) && current === 1 ? 'Pass the device to the invited player and reveal the board.' : current === 1 ? 'The computer is choosing a move…' : 'Choose an open square.';
     $('#rematch-button').hidden = !isOver;
     if (match.remote && match.packageUrl && !match.isSpectator) launchGamePackage(match);
     setView('play');
@@ -1211,8 +1382,8 @@
     } else {
       match.isSpectator = false;
     }
-    if (!match.remote && match.gameId !== 'ttt') {
-      toast('This local prototype is playable with Tic-Tac-Toe.');
+    if (!match.remote && match.gameId !== 'ttt' && !(window.portalGames && window.portalGames[match.gameId])) {
+      toast('This local game does not have a playable rules module yet.');
       return;
     }
     renderPlay(match);
@@ -1320,14 +1491,18 @@
     match.version += 1;
     match.turnPlayerIndex = 0;
     match.myPlayerIndex = 0;
-    if (match.gameId === 'ttt') match.state = { board: Array(9).fill(null), turn: 0, winner: null, winningLine: [] };
+    match.remote = false;
+    match.isSpectator = false;
+    const gameModule = window.portalGames && window.portalGames[match.gameId];
+    if (gameModule) match.state = gameModule.createState();
+    else if (match.gameId === 'ttt') match.state = { board: Array(9).fill(null), turn: 0, winner: null, winningLine: [] };
     match.previewText = `Demo table with ${match.opponent} · No online game is connected`;
     persistMatches();
     $('#demo-lobby-dialog').close();
     state.currentMatchFilter = 'active';
     $$('.match-tab').forEach((tab) => tab.classList.toggle('selected', tab.dataset.matchFilter === 'active'));
     setView('matches');
-    openMockMatch(match);
+    openMatch(match);
   }
 
   async function openSharedMatchIfPresent() {
@@ -1575,6 +1750,7 @@
       if (!result.accessToken || !result.user) throw new Error('The login response did not include an accessToken and user.');
       state.authToken = result.accessToken;
       state.currentUser = result.user;
+      state.profileSettings = readProfileSettings(profileSettingsIdentity(result.user, state.demoProfile), result.user.displayName || result.user.name || result.user.email || 'Player');
       sessionStorage.setItem(TOKEN_KEY, result.accessToken);
       $('#development-key').value = '';
       renderIdentity();
@@ -1588,6 +1764,7 @@
     } catch (error) {
       state.authToken = '';
       state.currentUser = null;
+      state.profileSettings = readProfileSettings(profileSettingsIdentity(null, state.demoProfile), state.demoProfile.displayName);
       sessionStorage.removeItem(TOKEN_KEY);
       renderIdentity();
       $('#settings-feedback').textContent = error.message;
@@ -1860,6 +2037,13 @@
       const previous = state.currentMatch;
       if (!previous || previous.remote) { toast('Remote rematches start from the match lobby.'); return; }
       const rematch = makeLocalMatch(gameCatalog.find((game) => game.id === previous.gameId) || gameCatalog[0], previous.mode);
+      if (previous.isRealTimeDemo) {
+        rematch.isRealTimeDemo = true;
+        rematch.inviteKind = previous.inviteKind;
+        rematch.invitee = previous.invitee;
+        rematch.opponent = previous.opponent;
+        rematch.previewText = previous.previewText;
+      }
       state.matches.unshift(rematch);
       persistMatches();
       openMatch(rematch);
@@ -1895,6 +2079,7 @@
   renderIdentity();
   persistMatches();
   persistPendingMoves();
+  renderQuickStartArt();
   renderGames();
   renderMatches();
   if ('serviceWorker' in navigator && /^https?:$/.test(window.location.protocol)) {
@@ -1902,7 +2087,8 @@
   }
   if (state.authToken) {
     apiRequest('/users/me').then((user) => {
-      openLogin();
+      state.currentUser = user;
+      state.profileSettings = readProfileSettings(profileSettingsIdentity(user, state.demoProfile), user.displayName || user.name || user.email || 'Player');
       renderIdentity();
       persistPendingMoves();
       return loadRemoteData().then(flushPendingMoves).then(openSharedMatchIfPresent);

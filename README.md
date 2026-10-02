@@ -2,6 +2,10 @@
 
 A responsive web portal prototype for COMSW4995 Multiplayer Games. The first playable slice includes game discovery, filters, match setup, persistent local matches, pass-and-play Tic-Tac-Toe, and a computer opponent.
 
+## Run in Browser
+
+Go to <https://cdilli223.github.io/comsw4995-web-game-portal/>. The first screen uses fictional catalog, profile, and match data so the portal is explorable without backend access. The profile dialog's Google, Facebook, guest, and phone paths are explicitly mock interactions. Use the gear button for the separate local backend development login. `file://` can render the local demo, but service workers and API requests require localhost or HTTPS.
+
 ## Run locally
 
 There is no build step or package install. From this directory, run:
@@ -10,7 +14,7 @@ There is no build step or package install. From this directory, run:
 python3 -m http.server 8080
 ```
 
-Then open <http://localhost:8080>. The first screen uses fictional catalog, profile, and match data so the portal is explorable without backend access. The profile dialog's Google, Facebook, guest, and phone paths are explicitly mock interactions. Use the gear button for the separate local backend development login. `file://` can render the local demo, but service workers and API requests require localhost or HTTPS.
+Then open <http://localhost:8080>. Just as with the browser, the first page will constist of fictional data.
 
 ## Repository layout
 
@@ -74,13 +78,15 @@ To complete that connection, the teams need to agree on a package/export format 
 ## Current scope
 
 - Local Tic-Tac-Toe works against the computer or in pass-and-play and is saved in browser storage.
-- Poker, Chinese Checkers, Dots & Boxes, Connect Four, and Memory have static board/table previews in Discover. These illustrate visual direction only; their game rules and match logic are not implemented.
-- Without an authenticated published backend version, Ping-pong and Real-time create local lobby mockups with friend-invite or open-to-strangers flows, simulated joins, invite codes, and a demo match preview. These do not send invitations or create network matches.
+- Connect Four and Dots & Boxes also run locally against the computer or in pass-and-play. Their boards, scores, turns, and results are saved with each match.
+- Connect Four and Dots & Boxes run locally in computer and pass-and-play modes, with saved boards and game-specific rules. Poker, Chinese Checkers, and Memory remain static board/table previews; their rules and match logic are not implemented.
+- Without an authenticated published backend version, Ping-pong keeps its local friend-invite/open-lobby flow with simulated joins and invite codes. Real-time starts a local match against the game AI using the selected friend/stranger identity as a clearly labeled demo opponent. Neither flow sends invitations or creates network matches.
+- The match list also contains public Connect Four and Dots & Boxes demo matches that can be watched read-only. Real backend spectators remain restricted to responses with `capabilities.spectators` and an explicit `publicView`.
 - The profile center includes locally saved usernames/contact details and profile photos, built-in avatar presets, language and theme preferences, notification switches, mock social/payment settings, and a local support-request form. Messages is a separate global-navigation inbox with local replies. These are prototypes only: no payment, social, messaging, or support service is contacted, and full interface translations are not implemented.
 - The authenticated API path supports published registered Tic-Tac-Toe ping-pong/real-time lobbies, sharing/joining, owner start, versioned moves, and full-list refresh.
 - The portal shell is cached by a service worker. Local games keep working offline; remote Tic-Tac-Toe supports one pending move per match, auto-retry on reconnect, and a needs-review state on version conflict. This is not a general queue for arbitrary games.
 - The pass-and-play demo hides the board at each handoff until the next player reveals it. This is social privacy, not device-owner security.
-- Production Google/Facebook/phone sign-in, a public game catalog, random-opponent matchmaking, online bot seats, backend-provided spectator views, push notifications, portal/game translations, and additional locally playable games remain blocked or unimplemented.
+- Production Google/Facebook/phone sign-in, a public game catalog, random-opponent matchmaking, online bot seats, backend-provided spectator views, push notifications, portal/game translations, and playable Poker, Chinese Checkers, and Memory remain blocked or unimplemented.
 
 ## Match lifecycle policy
 

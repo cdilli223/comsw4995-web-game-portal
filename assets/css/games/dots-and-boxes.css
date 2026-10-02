@@ -1,0 +1,58 @@
+.live-board.dots-boxes-board {
+  width: min(100%, 420px);
+  aspect-ratio: 1;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 0;
+  padding: 2px;
+}
+.dots-boxes-dot {
+  width: 11px;
+  height: 11px;
+  z-index: 1;
+  align-self: center;
+  justify-self: center;
+  border-radius: 50%;
+  background: #34463a;
+}
+.dots-boxes-edge {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+}
+.dots-boxes-edge::after {
+  display: block;
+  border-radius: 3px;
+  background: #6d8b65;
+  content: '';
+  transition: background .12s ease, transform .12s ease;
+}
+.dots-boxes-edge.horizontal::after { width: 100%; height: 6px; }
+.dots-boxes-edge.vertical::after { width: 6px; height: 100%; }
+.dots-boxes-edge:hover:enabled::after { background: #415d43; transform: scale(.9); }
+.dots-boxes-edge.red::after { background: #d97861; }
+.dots-boxes-edge.blue::after { background: #6d85b4; }
+.dots-boxes-edge:focus-visible { z-index: 2; outline-offset: -2px; }
+.dots-boxes-square { display: grid; place-items: center; border-radius: 3px; background: transparent; }
+.dots-boxes-square.red { background: #f1d9cf; }
+.dots-boxes-square.blue { background: #dce5f5; }
+
+body[data-theme="dark"] .dots-boxes-dot { background: #e0e9e2; }
+body[data-theme="dark"] .dots-boxes-edge::after { background: #96ae84; }
+body[data-theme="dark"] .dots-boxes-edge:hover:enabled::after { background: #d7f477; }
+body[data-theme="dark"] .dots-boxes-edge.red::after { background: #ff9b84; }
+body[data-theme="dark"] .dots-boxes-edge.blue::after { background: #b0c6f2; }
+body[data-theme="dark"] .dots-boxes-square.red { background: #543832; }
+body[data-theme="dark"] .dots-boxes-square.blue { background: #34435a; }
+
+@media (max-width: 760px) {
+  .live-board.dots-boxes-board { width: min(100%, 360px); }
+  .dots-boxes-dot { width: 9px; height: 9px; }
+  .dots-boxes-edge.horizontal::after { height: 5px; }
+  .dots-boxes-edge.vertical::after { width: 5px; }
+}
