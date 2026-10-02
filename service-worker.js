@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gameportal-shell-v41';
+const CACHE_NAME = 'gameportal-shell-v42';
 const APP_ASSETS = ['./', './index.html', './assets/css/styles.css?v=35', './assets/css/games/connect-four.css', './assets/css/games/dots-and-boxes.css', './assets/js/app.js', './assets/js/games/connect-four.js', './assets/js/games/dots-and-boxes.js'];
 
 self.addEventListener('install', (event) => {

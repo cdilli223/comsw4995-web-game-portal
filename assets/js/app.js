@@ -1,6 +1,15 @@
 (() => {
   'use strict';
 
+  // Demo helper: visiting `?reset` clears all saved portal state, then reloads clean.
+  if (new URLSearchParams(location.search).has('reset')) {
+    [localStorage, sessionStorage].forEach((store) => {
+      Object.keys(store).filter((key) => key.startsWith('gameportal.')).forEach((key) => store.removeItem(key));
+    });
+    location.replace(location.pathname + location.hash);
+    return;
+  }
+
   const API_KEY = 'gameportal.apiBaseUrl';
   const BUILDER_KEY = 'gameportal.builderUrl';
   const MATCHES_KEY = 'gameportal.matches';
